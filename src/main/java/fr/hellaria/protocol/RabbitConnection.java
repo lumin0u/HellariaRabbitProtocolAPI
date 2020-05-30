@@ -13,6 +13,7 @@ import com.rabbitmq.client.DeliverCallback;
 import fr.hellaria.protocol.payloads.Payload;
 import fr.hellaria.protocol.payloads.PayloadHandshakeSetProtocol;
 import fr.hellaria.protocol.payloads.PayloadPing;
+import fr.hellaria.protocol.payloads.PayloadPlayerInfo;
 import fr.hellaria.protocol.payloads.PayloadPong;
 import fr.hellaria.protocol.payloads.PayloadServerInfo;
 
@@ -80,7 +81,10 @@ public class RabbitConnection
 			else if(this.handler != null)
 			{
 				if(payload instanceof PayloadServerInfo)
-					this.handler.handleServerInfo((PayloadServerInfo)payload);
+					this.handler.handleServerInfo((PayloadServerInfo)payload, source);
+				
+				if(payload instanceof PayloadPlayerInfo)
+					this.handler.handlePlayerInfo((PayloadPlayerInfo)payload, source);
 			}
 		};
 		

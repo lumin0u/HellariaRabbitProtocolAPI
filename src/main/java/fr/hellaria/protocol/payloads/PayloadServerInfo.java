@@ -100,6 +100,10 @@ public class PayloadServerInfo extends Payload
 	{
 		@Deprecated
 		ONLINE,
+		WAITING,
+		IN_GAME,
+		RESTARTING,
+		STARTING,
 		OFFLINE;
 	}
 }
