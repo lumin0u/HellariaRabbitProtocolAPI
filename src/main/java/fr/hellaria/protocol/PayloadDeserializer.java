@@ -38,6 +38,22 @@ public class PayloadDeserializer
 		return readByte() != 0;
 	}
 	
+	public double readDouble()
+	{
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		for(int i = 0; i < buffer.capacity(); i++)
+			buffer.put(readByte());
+		return buffer.getDouble(0);
+	}
+	
+	public float readFloat()
+	{
+		ByteBuffer buffer = ByteBuffer.allocate(4);
+		for(int i = 0; i < buffer.capacity(); i++)
+			buffer.put(readByte());
+		return buffer.getFloat(0);
+	}
+	
 	public int readInt()
 	{
 		ByteBuffer buffer = ByteBuffer.allocate(4);

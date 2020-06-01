@@ -14,13 +14,15 @@ public abstract class Payload
 	
 	static
 	{
-		payloads = new Class[6];
+		payloads = new Class[8];
 		payloads[0] = PayloadHandshakeSetProtocol.class;
 		payloads[1] = PayloadPing.class;
 		payloads[2] = PayloadPong.class;
 		payloads[3] = PayloadServerInfo.class;
 		payloads[4] = PayloadPlayerInfo.class;
 		payloads[5] = PayloadPlayerNicked.class;
+		payloads[6] = PayloadServerTypeAndGame.class;
+		payloads[7] = PayloadMonarias.class;
 	}
 	
 	public static Payload payloadFrom(int id)

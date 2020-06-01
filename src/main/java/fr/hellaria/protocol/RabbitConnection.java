@@ -1,6 +1,9 @@
 package fr.hellaria.protocol;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
@@ -14,8 +17,10 @@ import fr.hellaria.protocol.payloads.Payload;
 import fr.hellaria.protocol.payloads.PayloadHandshakeSetProtocol;
 import fr.hellaria.protocol.payloads.PayloadPing;
 import fr.hellaria.protocol.payloads.PayloadPlayerInfo;
+import fr.hellaria.protocol.payloads.PayloadPlayerNicked;
 import fr.hellaria.protocol.payloads.PayloadPong;
 import fr.hellaria.protocol.payloads.PayloadServerInfo;
+import fr.hellaria.protocol.payloads.PayloadServerTypeAndGame;
 
 public class RabbitConnection
 {
@@ -24,7 +29,8 @@ public class RabbitConnection
 	private Channel channel;
 	private PayloadHandler handler;
 	private String serverName;
-	private Payload buffer;
+	private Map<Integer, Predicate<Payload>> predicates;
+	private int predicatesId;
 	
 	// sendPacket(new PayloadHandshakeSetProtocol(), "proxy");
 	// sendPacket(new PayloadServerInfo(server), "proxy");
@@ -36,20 +42,32 @@ public class RabbitConnection
 		channel = connection.createChannel();
 		this.serverName = serverName;
 		this.handler = handler;
+		this.predicates = new HashMap<>();
 		
 		channel.queueDeclare(serverName, false, false, false, null);
+		System.out.println("[ProtocolAPI] Deleted "+channel.queuePurge(serverName).getMessageCount()+" messages in queue.");
 		
 		DeliverCallback deliverCallback = (consumerTag, delivery) ->
 		{
-			PayloadDeserializer deserializer = new PayloadDeserializer(delivery.getBody());// je veux mourir
+			PayloadDeserializer deserializer = new PayloadDeserializer(delivery.getBody());
 			
 			int packetId = deserializer.readVarInt();
+			
+			if(packetId == 0x7e)
+			{
+				if(handler != null)
+					handler.handlePayloadStop();
+				return;
+			}
+			
 			String source = deserializer.readString();
 			
 			Payload payload = Payload.payloadFrom(packetId);
 			payload.deserialize(deserializer);
 			
-			buffer = payload;
+			for(Entry<Integer, Predicate<Payload>> entry : predicates.entrySet())
+				if(entry.getValue().test(payload))
+					predicates.remove(entry.getKey());
 			
 			if(payload instanceof PayloadHandshakeSetProtocol)
 			{
@@ -57,7 +75,7 @@ public class RabbitConnection
 				{
 					if(((PayloadHandshakeSetProtocol)payload).getVersion() > HellariaProtocol.PROTOCOL_VERSION)
 					{
-						System.err.println("Ce serveur ne possède pas la derniere version du protocol hellaria, la communication est arrétée.");
+						System.err.println("[ProtocolAPI] Ce serveur ne possède pas la derniere version du protocol hellaria, la communication est arrétée.");
 						try
 						{
 							close();
@@ -68,7 +86,7 @@ public class RabbitConnection
 					}
 					else
 					{
-						System.err.println("Un serveur distant ne possède pas la derniere version du protocol hellaria.");
+						System.err.println("[ProtocolAPI] Un serveur distant ne possède pas la derniere version du protocol hellaria.");
 						sendPacket(new PayloadHandshakeSetProtocol(), source);
 					}
 				}
@@ -85,6 +103,12 @@ public class RabbitConnection
 				
 				if(payload instanceof PayloadPlayerInfo)
 					this.handler.handlePlayerInfo((PayloadPlayerInfo)payload, source);
+				
+				if(payload instanceof PayloadPlayerNicked)
+					this.handler.handlePlayerNicked((PayloadPlayerNicked)payload, source);
+				
+				if(payload instanceof PayloadServerTypeAndGame)
+					this.handler.handleServerTypeAndGame((PayloadServerTypeAndGame)payload, source);
 			}
 		};
 		
@@ -123,21 +147,25 @@ public class RabbitConnection
 		connection.close();
 	}
 	
-	public synchronized boolean waitFor(Predicate<Payload> predicate, long timeOut) throws InterruptedException
+	public boolean waitFor(Predicate<Payload> predicate, long timeOut) throws InterruptedException
 	{
 		long startDate = System.currentTimeMillis();
+		
+		int id = predicatesId++;
+		predicates.put(id, predicate);
 		
 		while(true)
 		{
 			Thread.sleep(1);
 			
 			if(System.currentTimeMillis() - timeOut > startDate)
-				return false;
-			if(buffer != null)
 			{
-				if(predicate.test(buffer))
-					return true;
-				buffer = null;
+				predicates.remove(id);
+				return false;
+			}
+			if(!predicates.containsKey(id))
+			{
+				return true;
 			}
 		}
 	}

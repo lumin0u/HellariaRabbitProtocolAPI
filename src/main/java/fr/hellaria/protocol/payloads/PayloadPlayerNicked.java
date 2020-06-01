@@ -38,4 +38,24 @@ public class PayloadPlayerNicked extends Payload
 		this.skinId = deserializer.readVarInt();
 		this.displayRank = PayloadPlayerInfo.EnumRankPlayer.values()[deserializer.readVarInt()];
 	}
+	
+	public PayloadPlayerInfo.EnumRankPlayer getDisplayRank()
+	{
+		return displayRank;
+	}
+	
+	public String getNickName()
+	{
+		return nickName;
+	}
+	
+	public int getSkinId()
+	{
+		return skinId;
+	}
+	
+	public String getUid()
+	{
+		return uid;
+	}
 }

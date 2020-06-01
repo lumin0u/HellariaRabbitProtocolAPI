@@ -96,6 +96,16 @@ public class PayloadServerInfo extends Payload
 		return status;
 	}
 	
+	public List<String> getPlayers()
+	{
+		return new ArrayList<>(players);
+	}
+	
+	public List<String> getSpectators()
+	{
+		return new ArrayList<>(spectators);
+	}
+	
 	public static enum EnumServerStatus
 	{
 		@Deprecated

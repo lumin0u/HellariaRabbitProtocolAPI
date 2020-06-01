@@ -36,6 +36,16 @@ public class PayloadSerializer
 		}while(value != 0);
 	}
 	
+	public void writeDouble(double value)
+	{
+		writeBytes(ByteBuffer.allocate(8).putDouble(value).array());
+	}
+	
+	public void writeFloat(float value)
+	{
+		writeBytes(ByteBuffer.allocate(4).putFloat(value).array());
+	}
+	
 	public void writeString(String value)
 	{
 		writeVarInt(value.length());

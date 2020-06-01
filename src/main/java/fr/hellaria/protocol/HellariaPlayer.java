@@ -6,7 +6,7 @@ public class HellariaPlayer
 {
 	private String uid;
 	private boolean spectator;
-	private boolean nicked;
+	private boolean nicked;	
 	private PayloadPlayerInfo.EnumRankStaff rankStaff;
 	private PayloadPlayerInfo.EnumRankPlayer rankPlayer;
 	private int partyId;

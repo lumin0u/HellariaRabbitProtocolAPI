@@ -9,6 +9,7 @@ public class HellariaServer
 {
 	String name;
 	int maxPlayerCount;
+	@Deprecated
 	boolean parties;
 	EnumServerStatus status;
 	List<String> players;
@@ -34,6 +35,7 @@ public class HellariaServer
 		return maxPlayerCount;
 	}
 
+	@Deprecated
 	public boolean isParties()
 	{
 		return parties;
@@ -49,6 +51,7 @@ public class HellariaServer
 		this.maxPlayerCount = maxPlayerCount;
 	}
 
+	@Deprecated
 	public void setParties(boolean parties)
 	{
 		this.parties = parties;
