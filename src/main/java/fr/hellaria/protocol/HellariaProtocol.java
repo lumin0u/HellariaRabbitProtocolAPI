@@ -2,6 +2,6 @@ package fr.hellaria.protocol;
 
 public class HellariaProtocol
 {
-	public static final int PROTOCOL_VERSION = 2;
+	public static final int PROTOCOL_VERSION = 3;
 	public static final String PROXY_NAME = "proxy";
 }

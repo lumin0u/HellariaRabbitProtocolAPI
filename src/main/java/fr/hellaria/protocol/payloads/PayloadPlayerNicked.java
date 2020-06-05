@@ -7,18 +7,20 @@ public class PayloadPlayerNicked extends Payload
 {
 	private String uid;
 	private String nickName;
-	private int skinId;
+	private String skinSignature;
+	private String skinValue;
 	private PayloadPlayerInfo.EnumRankPlayer displayRank;
 	
 	public PayloadPlayerNicked()
 	{}
 	
-	public PayloadPlayerNicked(String uid, String nickName, int skinId, PayloadPlayerInfo.EnumRankPlayer displayRank)
+	public PayloadPlayerNicked(String uid, String nickName, String skinSignature, String skinValue, PayloadPlayerInfo.EnumRankPlayer displayRank)
 	{
 		this.uid = uid;
 		this.nickName = nickName;
-		this.skinId = skinId;
 		this.displayRank = displayRank;
+		this.skinValue = skinValue;
+		this.skinSignature = skinSignature;
 	}
 	
 	@Override
@@ -26,7 +28,8 @@ public class PayloadPlayerNicked extends Payload
 	{
 		serializer.writeString(this.uid);
 		serializer.writeString(this.nickName);
-		serializer.writeVarInt(this.skinId);
+		serializer.writeString(this.skinSignature);
+		serializer.writeString(this.skinValue);
 		serializer.writeVarInt(this.displayRank.ordinal());
 	}
 	
@@ -35,27 +38,58 @@ public class PayloadPlayerNicked extends Payload
 	{
 		this.uid = deserializer.readString();
 		this.nickName = deserializer.readString();
-		this.skinId = deserializer.readVarInt();
+		this.skinSignature = deserializer.readString();
+		this.skinValue = deserializer.readString();
 		this.displayRank = PayloadPlayerInfo.EnumRankPlayer.values()[deserializer.readVarInt()];
 	}
-	
-	public PayloadPlayerInfo.EnumRankPlayer getDisplayRank()
+
+	public String getUid()
 	{
-		return displayRank;
+		return uid;
 	}
-	
+
+	public void setUid(String uid)
+	{
+		this.uid = uid;
+	}
+
 	public String getNickName()
 	{
 		return nickName;
 	}
-	
-	public int getSkinId()
+
+	public void setNickName(String nickName)
 	{
-		return skinId;
+		this.nickName = nickName;
 	}
-	
-	public String getUid()
+
+	public String getSkinSignature()
 	{
-		return uid;
+		return skinSignature;
+	}
+
+	public void setSkinSignature(String skinSignature)
+	{
+		this.skinSignature = skinSignature;
+	}
+
+	public String getSkinValue()
+	{
+		return skinValue;
+	}
+
+	public void setSkinValue(String skinValue)
+	{
+		this.skinValue = skinValue;
+	}
+
+	public PayloadPlayerInfo.EnumRankPlayer getDisplayRank()
+	{
+		return displayRank;
+	}
+
+	public void setDisplayRank(PayloadPlayerInfo.EnumRankPlayer displayRank)
+	{
+		this.displayRank = displayRank;
 	}
 }

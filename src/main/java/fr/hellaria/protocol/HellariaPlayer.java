@@ -1,6 +1,10 @@
 package fr.hellaria.protocol;
 
+import java.util.HashMap;
+
 import fr.hellaria.protocol.payloads.PayloadPlayerInfo;
+import fr.hellaria.protocol.payloads.PayloadPlayerInfo.EnumRankPlayer;
+import fr.hellaria.protocol.payloads.PayloadPlayerInfo.EnumRankStaff;
 
 public class HellariaPlayer
 {
@@ -11,8 +15,9 @@ public class HellariaPlayer
 	private PayloadPlayerInfo.EnumRankPlayer rankPlayer;
 	private int partyId;
 	private String spectatingTarget;
+	private HashMap<String, Object> settings;
 	
-	public HellariaPlayer(String uid, boolean spectator, boolean nicked, PayloadPlayerInfo.EnumRankStaff rankStaff, PayloadPlayerInfo.EnumRankPlayer rankPlayer, int partyId, String spectatingTarget)
+	public HellariaPlayer(String uid, boolean spectator, boolean nicked, EnumRankStaff rankStaff, EnumRankPlayer rankPlayer, int partyId, String spectatingTarget, HashMap<String, Object> settings)
 	{
 		this.uid = uid;
 		this.spectator = spectator;
@@ -21,6 +26,7 @@ public class HellariaPlayer
 		this.rankPlayer = rankPlayer;
 		this.partyId = partyId;
 		this.spectatingTarget = spectatingTarget;
+		this.settings = settings;
 	}
 	
 	public String getUid()
@@ -91,5 +97,15 @@ public class HellariaPlayer
 	public void setSpectatingTarget(String spectatingTarget)
 	{
 		this.spectatingTarget = spectatingTarget;
+	}
+
+	public HashMap<String, Object> getSettings()
+	{
+		return settings;
+	}
+
+	public void setSettings(HashMap<String, Object> settings)
+	{
+		this.settings = settings;
 	}
 }

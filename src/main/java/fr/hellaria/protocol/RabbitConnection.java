@@ -1,7 +1,9 @@
 package fr.hellaria.protocol;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeoutException;
@@ -15,10 +17,14 @@ import com.rabbitmq.client.DeliverCallback;
 
 import fr.hellaria.protocol.payloads.Payload;
 import fr.hellaria.protocol.payloads.PayloadHandshakeSetProtocol;
+import fr.hellaria.protocol.payloads.PayloadMonarias;
+import fr.hellaria.protocol.payloads.PayloadParty;
 import fr.hellaria.protocol.payloads.PayloadPing;
 import fr.hellaria.protocol.payloads.PayloadPlayerInfo;
 import fr.hellaria.protocol.payloads.PayloadPlayerNicked;
 import fr.hellaria.protocol.payloads.PayloadPong;
+import fr.hellaria.protocol.payloads.PayloadRestart;
+import fr.hellaria.protocol.payloads.PayloadSendToHub;
 import fr.hellaria.protocol.payloads.PayloadServerInfo;
 import fr.hellaria.protocol.payloads.PayloadServerTypeAndGame;
 
@@ -27,25 +33,23 @@ public class RabbitConnection
 	private ConnectionFactory factory;
 	private Connection connection;
 	private Channel channel;
-	private PayloadHandler handler;
+	private List<PayloadHandler> handlers;
 	private String serverName;
 	private Map<Integer, Predicate<Payload>> predicates;
 	private int predicatesId;
 	
-	// sendPacket(new PayloadHandshakeSetProtocol(), "proxy");
-	// sendPacket(new PayloadServerInfo(server), "proxy");
-	
-	public RabbitConnection(String serverName, PayloadHandler handler) throws IOException, TimeoutException
+	public RabbitConnection(String serverName) throws IOException, TimeoutException
 	{
+		System.out.println("[ProtocolAPI] Initialisation da la connection rabbitmq (protocol version : " + HellariaProtocol.PROTOCOL_VERSION + ").");
 		factory = new ConnectionFactory();
 		connection = factory.newConnection();
 		channel = connection.createChannel();
 		this.serverName = serverName;
-		this.handler = handler;
+		this.handlers = new ArrayList<>();
 		this.predicates = new HashMap<>();
 		
 		channel.queueDeclare(serverName, false, false, false, null);
-		System.out.println("[ProtocolAPI] Deleted "+channel.queuePurge(serverName).getMessageCount()+" messages in queue.");
+		System.out.println("[ProtocolAPI] " + channel.queuePurge(serverName).getMessageCount() + " messages ont ete supprimes de la queue.");
 		
 		DeliverCallback deliverCallback = (consumerTag, delivery) ->
 		{
@@ -55,8 +59,9 @@ public class RabbitConnection
 			
 			if(packetId == 0x7e)
 			{
-				if(handler != null)
-					handler.handlePayloadStop();
+				for(PayloadHandler handler : handlers)
+					if(handler != null)
+						handler.handlePayloadStop();
 				return;
 			}
 			
@@ -68,25 +73,23 @@ public class RabbitConnection
 			for(Entry<Integer, Predicate<Payload>> entry : predicates.entrySet())
 				if(entry.getValue().test(payload))
 					predicates.remove(entry.getKey());
-			
+				
 			if(payload instanceof PayloadHandshakeSetProtocol)
 			{
+				for(PayloadHandler handler : handlers)
+					if(handler != null)
+						if(payload instanceof PayloadHandshakeSetProtocol)
+							handler.handleHandshake(source);
+				
 				if(((PayloadHandshakeSetProtocol)payload).getVersion() != HellariaProtocol.PROTOCOL_VERSION)
 				{
 					if(((PayloadHandshakeSetProtocol)payload).getVersion() > HellariaProtocol.PROTOCOL_VERSION)
 					{
-						System.err.println("[ProtocolAPI] Ce serveur ne possède pas la derniere version du protocol hellaria, la communication est arrétée.");
-						try
-						{
-							close();
-						}catch(TimeoutException e)
-						{
-							e.printStackTrace();
-						}
+						System.err.println("[ProtocolAPI] Ce serveur ne possède pas la derniere version du protocol hellaria.");
 					}
 					else
 					{
-						System.err.println("[ProtocolAPI] Un serveur distant ne possède pas la derniere version du protocol hellaria.");
+						System.err.println("[ProtocolAPI] \"" + source + "\" ne possède pas la derniere version du protocol hellaria.");
 						sendPacket(new PayloadHandshakeSetProtocol(), source);
 					}
 				}
@@ -96,19 +99,35 @@ public class RabbitConnection
 				sendPacket(new PayloadPong(), source);
 			}
 			
-			else if(this.handler != null)
+			else
 			{
-				if(payload instanceof PayloadServerInfo)
-					this.handler.handleServerInfo((PayloadServerInfo)payload, source);
-				
-				if(payload instanceof PayloadPlayerInfo)
-					this.handler.handlePlayerInfo((PayloadPlayerInfo)payload, source);
-				
-				if(payload instanceof PayloadPlayerNicked)
-					this.handler.handlePlayerNicked((PayloadPlayerNicked)payload, source);
-				
-				if(payload instanceof PayloadServerTypeAndGame)
-					this.handler.handleServerTypeAndGame((PayloadServerTypeAndGame)payload, source);
+				for(PayloadHandler handler : handlers)
+				{
+					if(handler != null)
+						if(payload instanceof PayloadServerInfo)
+							handler.handleServerInfo((PayloadServerInfo)payload, source);
+						
+					if(payload instanceof PayloadPlayerInfo)
+						handler.handlePlayerInfo((PayloadPlayerInfo)payload, source);
+					
+					if(payload instanceof PayloadPlayerNicked)
+						handler.handlePlayerNicked((PayloadPlayerNicked)payload, source);
+					
+					if(payload instanceof PayloadServerTypeAndGame)
+						handler.handleServerTypeAndGame((PayloadServerTypeAndGame)payload, source);
+					
+					if(payload instanceof PayloadParty)
+						handler.handleParty((PayloadParty)payload, source);
+					
+					if(payload instanceof PayloadMonarias)
+						handler.handleMonarias((PayloadMonarias)payload, source);
+					
+					if(payload instanceof PayloadSendToHub)
+						handler.handleSendToHub((PayloadSendToHub)payload, source);
+					
+					if(payload instanceof PayloadRestart)
+						handler.handleRestart((PayloadRestart)payload, source);
+				}
 			}
 		};
 		
@@ -124,7 +143,7 @@ public class RabbitConnection
 	public void sendPacket(Payload payload, String target) throws IOException, AlreadyClosedException
 	{
 		PayloadSerializer serializer = new PayloadSerializer();
-		serializer.writeInt(Payload.idFrom(payload));
+		serializer.writeVarInt(Payload.idFrom(payload));
 		serializer.writeString(serverName);
 		payload.serialize(serializer);
 		
@@ -132,9 +151,15 @@ public class RabbitConnection
 		channel.basicPublish("", target, null, serializer.getBytes());
 	}
 	
-	public void setHandler(PayloadHandler handler)
+	public void addHandler(PayloadHandler handler)
 	{
-		this.handler = handler;
+		this.handlers.add(handler);
+	}
+	
+	public void rmHandler(PayloadHandler handler)
+	{
+		if(handler != null)
+			this.handlers.remove(handler);
 	}
 	
 	public boolean isClosed()

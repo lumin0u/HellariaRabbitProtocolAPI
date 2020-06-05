@@ -24,49 +24,49 @@ public class HellariaServer
 		this.players = new ArrayList<>(players);
 		this.spectators = new ArrayList<>(spectators);
 	}
-
+	
 	public String getName()
 	{
 		return name;
 	}
-
+	
 	public int getMaxPlayerCount()
 	{
 		return maxPlayerCount;
 	}
-
+	
 	@Deprecated
 	public boolean isParties()
 	{
 		return parties;
 	}
-
+	
 	public EnumServerStatus getStatus()
 	{
 		return status;
 	}
-
+	
 	public void setMaxPlayerCount(int maxPlayerCount)
 	{
 		this.maxPlayerCount = maxPlayerCount;
 	}
-
+	
 	@Deprecated
 	public void setParties(boolean parties)
 	{
 		this.parties = parties;
 	}
-
+	
 	public void setStatus(EnumServerStatus status)
 	{
 		this.status = status;
 	}
-
+	
 	public List<String> getPlayers()
 	{
 		return players;
 	}
-
+	
 	public List<String> getSpectators()
 	{
 		return spectators;

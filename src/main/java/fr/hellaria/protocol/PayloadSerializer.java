@@ -78,10 +78,23 @@ public class PayloadSerializer
 		payload[payload.length - 1] = value;
 	}
 	
-	private void writeBytes(byte[] value)
+	public void writeBytes(byte[] value)
 	{
 		for(byte b : value)
 			writeByte(b);
+	}
+	
+	public void insert(byte value, int index)
+	{
+		byte last = value;
+		writeByte((byte)0);
+		
+		for(int i = index; i < payload.length; i++)
+		{
+			byte b = last;
+			last = payload[i];
+			payload[i] = b;
+		}
 	}
 	
 	public byte[] getBytes()
