@@ -10,7 +10,6 @@ import fr.hellaria.protocol.PayloadSerializer;
 public class PayloadServerInfo extends Payload
 {
 	private String name;
-	private int playerCount, maxPlayerCount, spectatorCount;
 	private EnumServerStatus status;
 	private List<String> players, spectators;
 	
@@ -18,56 +17,46 @@ public class PayloadServerInfo extends Payload
 	{
 		
 	}
-
+	
 	public PayloadServerInfo(HellariaServer server)
 	{
 		this.name = server.getName();
 		this.players = new ArrayList<>(server.getPlayers());
 		this.spectators = new ArrayList<>(server.getSpectators());
-		this.playerCount = players.size();
-		this.spectatorCount = spectators.size();
-		this.maxPlayerCount = server.getMaxPlayerCount();
 		this.status = server.getStatus();
 	}
-
-	public PayloadServerInfo(String name, int maxPlayerCount, EnumServerStatus status, List<String> players, List<String> spectators)
+	
+	public PayloadServerInfo(String name, EnumServerStatus status, List<String> players, List<String> spectators)
 	{
 		this.name = name;
-		this.playerCount = players.size();
-		this.maxPlayerCount = maxPlayerCount;
-		this.spectatorCount = spectators.size();
 		this.status = status;
 		this.players = new ArrayList<>(players);
 		this.spectators = new ArrayList<>(spectators);
 	}
-
+	
 	@Override
 	public void serialize(PayloadSerializer serializer)
 	{
 		serializer.writeString(name);
 		serializer.writeVarInt(status.ordinal());
-		serializer.writeVarInt(maxPlayerCount);
-		serializer.writeVarInt(playerCount);
+		serializer.writeVarInt(players.size());
 		for(String s : players)
 			serializer.writeString(s);
-		serializer.writeVarInt(spectatorCount);
+		serializer.writeVarInt(spectators.size());
 		for(String s : spectators)
 			serializer.writeString(s);
 		
 	}
-
+	
 	@Override
 	public void deserialize(PayloadDeserializer deserializer)
 	{
 		name = deserializer.readString();
 		status = EnumServerStatus.values()[deserializer.readVarInt()];
-		maxPlayerCount = deserializer.readVarInt();
-		playerCount = deserializer.readVarInt();
 		players = new ArrayList<>();
-		for(int i = 0; i < playerCount; i++)
+		for(int i = 0; i < deserializer.readVarInt(); i++)
 			players.add(deserializer.readString());
-		spectatorCount = deserializer.readVarInt();
-		for(int i = 0; i < spectatorCount; i++)
+		for(int i = 0; i < deserializer.readVarInt(); i++)
 			spectators.add(deserializer.readString());
 	}
 	
@@ -75,22 +64,7 @@ public class PayloadServerInfo extends Payload
 	{
 		return name;
 	}
-
-	public int getPlayerCount()
-	{
-		return playerCount;
-	}
-
-	public int getMaxPlayerCount()
-	{
-		return maxPlayerCount;
-	}
-
-	public int getSpectatorsCount()
-	{
-		return spectatorCount;
-	}
-
+	
 	public EnumServerStatus getStatus()
 	{
 		return status;
@@ -104,6 +78,26 @@ public class PayloadServerInfo extends Payload
 	public List<String> getSpectators()
 	{
 		return new ArrayList<>(spectators);
+	}
+	
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+	
+	public void setStatus(EnumServerStatus status)
+	{
+		this.status = status;
+	}
+	
+	public void setPlayers(List<String> players)
+	{
+		this.players = players;
+	}
+	
+	public void setSpectators(List<String> spectators)
+	{
+		this.spectators = spectators;
 	}
 	
 	public static enum EnumServerStatus

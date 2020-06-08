@@ -1,9 +1,12 @@
 package fr.hellaria.protocol;
 
+import fr.hellaria.protocol.payloads.PayloadFriends;
 import fr.hellaria.protocol.payloads.PayloadMonarias;
 import fr.hellaria.protocol.payloads.PayloadParty;
+import fr.hellaria.protocol.payloads.PayloadPlayerAskPosition;
 import fr.hellaria.protocol.payloads.PayloadPlayerInfo;
 import fr.hellaria.protocol.payloads.PayloadPlayerNicked;
+import fr.hellaria.protocol.payloads.PayloadPlayerPosition;
 import fr.hellaria.protocol.payloads.PayloadRestart;
 import fr.hellaria.protocol.payloads.PayloadSendToHub;
 import fr.hellaria.protocol.payloads.PayloadServerInfo;
@@ -30,4 +33,10 @@ public interface PayloadHandler
 	public void handleSendToHub(PayloadSendToHub payload, String source);
 	
 	public void handleRestart(PayloadRestart payload, String source);
+	
+	public void handleFriends(PayloadFriends payload, String source);
+	
+	public void handleAskPosition(PayloadPlayerAskPosition payload, String source);
+	
+	public void handlePlayerPosition(PayloadPlayerPosition payload, String source);
 }

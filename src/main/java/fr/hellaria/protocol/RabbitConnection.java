@@ -16,12 +16,15 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 
 import fr.hellaria.protocol.payloads.Payload;
+import fr.hellaria.protocol.payloads.PayloadFriends;
 import fr.hellaria.protocol.payloads.PayloadHandshakeSetProtocol;
 import fr.hellaria.protocol.payloads.PayloadMonarias;
 import fr.hellaria.protocol.payloads.PayloadParty;
 import fr.hellaria.protocol.payloads.PayloadPing;
+import fr.hellaria.protocol.payloads.PayloadPlayerAskPosition;
 import fr.hellaria.protocol.payloads.PayloadPlayerInfo;
 import fr.hellaria.protocol.payloads.PayloadPlayerNicked;
+import fr.hellaria.protocol.payloads.PayloadPlayerPosition;
 import fr.hellaria.protocol.payloads.PayloadPong;
 import fr.hellaria.protocol.payloads.PayloadRestart;
 import fr.hellaria.protocol.payloads.PayloadSendToHub;
@@ -127,6 +130,15 @@ public class RabbitConnection
 					
 					if(payload instanceof PayloadRestart)
 						handler.handleRestart((PayloadRestart)payload, source);
+					
+					if(payload instanceof PayloadFriends)
+						handler.handleFriends((PayloadFriends)payload, source);
+					
+					if(payload instanceof PayloadPlayerAskPosition)
+						handler.handleAskPosition((PayloadPlayerAskPosition)payload, source);
+					
+					if(payload instanceof PayloadPlayerPosition)
+						handler.handlePlayerPosition((PayloadPlayerPosition)payload, source);
 				}
 			}
 		};
