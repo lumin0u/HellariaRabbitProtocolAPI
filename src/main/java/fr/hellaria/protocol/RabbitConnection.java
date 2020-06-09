@@ -27,7 +27,7 @@ import fr.hellaria.protocol.payloads.PayloadPlayerNicked;
 import fr.hellaria.protocol.payloads.PayloadPlayerPosition;
 import fr.hellaria.protocol.payloads.PayloadPong;
 import fr.hellaria.protocol.payloads.PayloadRestart;
-import fr.hellaria.protocol.payloads.PayloadSendToHub;
+import fr.hellaria.protocol.payloads.PayloadSendToServer;
 import fr.hellaria.protocol.payloads.PayloadServerInfo;
 import fr.hellaria.protocol.payloads.PayloadServerTypeAndGame;
 
@@ -43,6 +43,9 @@ public class RabbitConnection
 	
 	public RabbitConnection(String serverName) throws IOException, TimeoutException
 	{
+		if(serverName == null || serverName.equals(""))
+			throw new IllegalArgumentException("serverName cannot be null/empty");
+		
 		System.out.println("[ProtocolAPI] Initialisation da la connection rabbitmq (protocol version : " + HellariaProtocol.PROTOCOL_VERSION + ").");
 		factory = new ConnectionFactory();
 		connection = factory.newConnection();
@@ -56,90 +59,96 @@ public class RabbitConnection
 		
 		DeliverCallback deliverCallback = (consumerTag, delivery) ->
 		{
-			PayloadDeserializer deserializer = new PayloadDeserializer(delivery.getBody());
-			
-			int packetId = deserializer.readVarInt();
-			
-			if(packetId == 0x7e)
+			try
 			{
-				for(PayloadHandler handler : handlers)
-					if(handler != null)
-						handler.handlePayloadStop();
-				return;
-			}
-			
-			String source = deserializer.readString();
-			
-			Payload payload = Payload.payloadFrom(packetId);
-			payload.deserialize(deserializer);
-			
-			for(Entry<Integer, Predicate<Payload>> entry : predicates.entrySet())
-				if(entry.getValue().test(payload))
-					predicates.remove(entry.getKey());
+				PayloadDeserializer deserializer = new PayloadDeserializer(delivery.getBody());
 				
-			if(payload instanceof PayloadHandshakeSetProtocol)
-			{
-				for(PayloadHandler handler : handlers)
-					if(handler != null)
-						if(payload instanceof PayloadHandshakeSetProtocol)
-							handler.handleHandshake(source);
+				int packetId = deserializer.readVarInt();
 				
-				if(((PayloadHandshakeSetProtocol)payload).getVersion() != HellariaProtocol.PROTOCOL_VERSION)
+				if(packetId == 0x7e)
 				{
-					if(((PayloadHandshakeSetProtocol)payload).getVersion() > HellariaProtocol.PROTOCOL_VERSION)
+					for(PayloadHandler handler : handlers)
+						if(handler != null)
+							handler.handlePayloadStop();
+					return;
+				}
+				
+				String source = deserializer.readString();
+				
+				Payload payload = Payload.payloadFrom(packetId);
+				payload.deserialize(deserializer);
+				
+				for(Entry<Integer, Predicate<Payload>> entry : predicates.entrySet())
+					if(entry.getValue().test(payload))
+						predicates.remove(entry.getKey());
+					
+				if(payload instanceof PayloadHandshakeSetProtocol)
+				{
+					for(PayloadHandler handler : handlers)
+						if(handler != null)
+							if(payload instanceof PayloadHandshakeSetProtocol)
+								handler.handleHandshake(source);
+							
+					if(((PayloadHandshakeSetProtocol)payload).getVersion() != HellariaProtocol.PROTOCOL_VERSION)
 					{
-						System.err.println("[ProtocolAPI] Ce serveur ne possède pas la derniere version du protocol hellaria.");
-					}
-					else
-					{
-						System.err.println("[ProtocolAPI] \"" + source + "\" ne possède pas la derniere version du protocol hellaria.");
-						sendPacket(new PayloadHandshakeSetProtocol(), source);
+						if(((PayloadHandshakeSetProtocol)payload).getVersion() > HellariaProtocol.PROTOCOL_VERSION)
+						{
+							System.err.println("[ProtocolAPI] Ce serveur ne possède pas la derniere version du protocol hellaria.");
+						}
+						else
+						{
+							System.err.println("[ProtocolAPI] \"" + source + "\" ne possède pas la derniere version du protocol hellaria.");
+							sendPacket(new PayloadHandshakeSetProtocol(), source);
+						}
 					}
 				}
-			}
-			else if(payload instanceof PayloadPing)
-			{
-				sendPacket(new PayloadPong(), source);
-			}
-			
-			else
-			{
-				for(PayloadHandler handler : handlers)
+				else if(payload instanceof PayloadPing)
 				{
-					if(handler != null)
-						if(payload instanceof PayloadServerInfo)
-							handler.handleServerInfo((PayloadServerInfo)payload, source);
+					sendPacket(new PayloadPong(), source);
+				}
+				
+				else
+				{
+					for(PayloadHandler handler : handlers)
+					{
+						if(handler != null)
+							if(payload instanceof PayloadServerInfo)
+								handler.handleServerInfo((PayloadServerInfo)payload, source);
+							
+						if(payload instanceof PayloadPlayerInfo)
+							handler.handlePlayerInfo((PayloadPlayerInfo)payload, source);
 						
-					if(payload instanceof PayloadPlayerInfo)
-						handler.handlePlayerInfo((PayloadPlayerInfo)payload, source);
-					
-					if(payload instanceof PayloadPlayerNicked)
-						handler.handlePlayerNicked((PayloadPlayerNicked)payload, source);
-					
-					if(payload instanceof PayloadServerTypeAndGame)
-						handler.handleServerTypeAndGame((PayloadServerTypeAndGame)payload, source);
-					
-					if(payload instanceof PayloadParty)
-						handler.handleParty((PayloadParty)payload, source);
-					
-					if(payload instanceof PayloadMonarias)
-						handler.handleMonarias((PayloadMonarias)payload, source);
-					
-					if(payload instanceof PayloadSendToHub)
-						handler.handleSendToHub((PayloadSendToHub)payload, source);
-					
-					if(payload instanceof PayloadRestart)
-						handler.handleRestart((PayloadRestart)payload, source);
-					
-					if(payload instanceof PayloadFriends)
-						handler.handleFriends((PayloadFriends)payload, source);
-					
-					if(payload instanceof PayloadPlayerAskPosition)
-						handler.handleAskPosition((PayloadPlayerAskPosition)payload, source);
-					
-					if(payload instanceof PayloadPlayerPosition)
-						handler.handlePlayerPosition((PayloadPlayerPosition)payload, source);
+						if(payload instanceof PayloadPlayerNicked)
+							handler.handlePlayerNicked((PayloadPlayerNicked)payload, source);
+						
+						if(payload instanceof PayloadServerTypeAndGame)
+							handler.handleServerTypeAndGame((PayloadServerTypeAndGame)payload, source);
+						
+						if(payload instanceof PayloadParty)
+							handler.handleParty((PayloadParty)payload, source);
+						
+						if(payload instanceof PayloadMonarias)
+							handler.handleMonarias((PayloadMonarias)payload, source);
+						
+						if(payload instanceof PayloadSendToServer)
+							handler.handleSendToServer((PayloadSendToServer)payload, source);
+						
+						if(payload instanceof PayloadRestart)
+							handler.handleRestart((PayloadRestart)payload, source);
+						
+						if(payload instanceof PayloadFriends)
+							handler.handleFriends((PayloadFriends)payload, source);
+						
+						if(payload instanceof PayloadPlayerAskPosition)
+							handler.handleAskPosition((PayloadPlayerAskPosition)payload, source);
+						
+						if(payload instanceof PayloadPlayerPosition)
+							handler.handlePlayerPosition((PayloadPlayerPosition)payload, source);
+					}
 				}
+			}catch(Exception e)
+			{
+				e.printStackTrace();
 			}
 		};
 		
@@ -154,12 +163,15 @@ public class RabbitConnection
 	
 	public void sendPacket(Payload payload, String target) throws IOException, AlreadyClosedException
 	{
+		if(target == null || target.equals(""))
+			throw new IllegalArgumentException("target cannot be null/empty");
+		
 		PayloadSerializer serializer = new PayloadSerializer();
 		serializer.writeVarInt(Payload.idFrom(payload));
 		serializer.writeString(serverName);
 		payload.serialize(serializer);
 		
-		channel.queueDeclare(target, false, false, false, null);
+		// channel.queueDeclare(target, false, false, false, null);
 		channel.basicPublish("", target, null, serializer.getBytes());
 	}
 	

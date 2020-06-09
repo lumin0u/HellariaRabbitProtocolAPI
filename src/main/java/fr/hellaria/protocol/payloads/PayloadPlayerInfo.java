@@ -10,6 +10,7 @@ import fr.hellaria.protocol.PayloadSerializer;
 public class PayloadPlayerInfo extends Payload
 {
 	private String uid;
+	private String name;
 	private boolean spectator;
 	private boolean nicked;
 	private EnumRankStaff rankStaff;
@@ -17,6 +18,9 @@ public class PayloadPlayerInfo extends Payload
 	private int partyId;
 	private String spectatingTarget;
 	private HashMap<String, Object> settings;
+	private long firstConnection;
+	private long lastConnection;
+	private int gameTime;
 	
 	public PayloadPlayerInfo()
 	{}
@@ -24,6 +28,7 @@ public class PayloadPlayerInfo extends Payload
 	public PayloadPlayerInfo(HellariaPlayer player)
 	{
 		this.uid = player.getUid();
+		this.name = player.getName();
 		this.spectator = player.isSpectator();
 		this.nicked = player.isNicked();
 		this.rankStaff = player.getRankStaff();
@@ -31,11 +36,15 @@ public class PayloadPlayerInfo extends Payload
 		this.partyId = player.getPartyId();
 		this.spectatingTarget = player.getSpectatingTarget();
 		this.settings = player.getSettings();
+		this.firstConnection = player.getFirstConnection();
+		this.lastConnection = player.getLastConnection();
+		this.gameTime = player.getGameTime();
 	}
 	
-	public PayloadPlayerInfo(String uid, boolean spectator, boolean nicked, EnumRankStaff rankStaff, EnumRankPlayer rankPlayer, int partyId, String spectatingTarget, HashMap<String, Object> settings)
+	public PayloadPlayerInfo(String uid, String name, boolean spectator, boolean nicked, EnumRankStaff rankStaff, EnumRankPlayer rankPlayer, int partyId, String spectatingTarget, HashMap<String, Object> settings, long firstConnection, long lastConnection, int gameTime)
 	{
 		this.uid = uid;
+		this.name = name;
 		this.spectator = spectator;
 		this.nicked = nicked;
 		this.rankStaff = rankStaff;
@@ -43,12 +52,16 @@ public class PayloadPlayerInfo extends Payload
 		this.partyId = partyId;
 		this.spectatingTarget = spectatingTarget;
 		this.settings = settings;
+		this.firstConnection = firstConnection;
+		this.lastConnection = lastConnection;
+		this.gameTime = gameTime;
 	}
-	
+
 	@Override
 	public void serialize(PayloadSerializer serializer)
 	{
 		serializer.writeString(this.uid);
+		serializer.writeString(this.name);
 		serializer.writeVarInt(this.rankPlayer.ordinal());
 		serializer.writeVarInt(this.rankStaff.ordinal());
 		serializer.writeVarInt(this.partyId);
@@ -63,24 +76,36 @@ public class PayloadPlayerInfo extends Payload
 		{
 			serializer.writeString(entry.getKey());
 			if(entry.getValue() instanceof Integer)
+			{
+				serializer.writeVarInt(1);
 				serializer.writeVarInt((int)entry.getValue());
+			}
 			else if(entry.getValue() instanceof Boolean)
-				serializer.writeVarInt((boolean)entry.getValue() ? Integer.MAX_VALUE - 1 : Integer.MAX_VALUE - 2);
+			{
+				serializer.writeVarInt(0);
+				serializer.writeBoolean((boolean)entry.getValue());
+			}
 			else
+			{
 				serializer.writeVarInt(-1);
+				serializer.writeVarInt(-1);
+			}
 		}
+		serializer.writeVarLong(this.firstConnection);
+		serializer.writeVarLong(this.lastConnection);
+		serializer.writeVarInt(this.gameTime);
 	}
 	
 	@Override
 	public void deserialize(PayloadDeserializer deserializer)
 	{
 		this.uid = deserializer.readString();
+		this.name = deserializer.readString();
 		this.rankPlayer = EnumRankPlayer.values()[deserializer.readVarInt()];
 		this.rankStaff = EnumRankStaff.values()[deserializer.readVarInt()];
 		this.partyId = deserializer.readVarInt();
 		this.nicked = deserializer.readBoolean();
 		this.spectator = deserializer.readBoolean();
-		this.spectatingTarget = "";
 		if(this.spectator)
 			this.spectatingTarget = deserializer.readString();
 		settings = new HashMap<>();
@@ -88,11 +113,17 @@ public class PayloadPlayerInfo extends Payload
 		for(int i = 0; i < len; i++)
 		{
 			String key = deserializer.readString();
-			Object value = deserializer.readVarInt();
-			if((int)value == Integer.MAX_VALUE - 1 || (int)value == Integer.MAX_VALUE - 2)
-				value = (int)value == Integer.MAX_VALUE - 1;
-			settings.put(key, value);
+			int type = deserializer.readVarInt();
+			if(type == 0)
+				settings.put(key, deserializer.readBoolean());
+			else if(type == 1)
+				settings.put(key, deserializer.readVarInt());
+			else
+				settings.put(key, deserializer.readVarInt());
 		}
+		this.firstConnection = deserializer.readVarLong();
+		this.lastConnection = deserializer.readVarLong();
+		this.gameTime = deserializer.readVarInt();
 	}
 	
 	public String getUid()
@@ -173,6 +204,46 @@ public class PayloadPlayerInfo extends Payload
 	public void setSettings(HashMap<String, Object> settings)
 	{
 		this.settings = settings;
+	}
+	
+	public String getName()
+	{
+		return name;
+	}
+	
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+	
+	public long getFirstConnection()
+	{
+		return firstConnection;
+	}
+	
+	public void setFirstConnection(long firstConnection)
+	{
+		this.firstConnection = firstConnection;
+	}
+	
+	public long getLastConnection()
+	{
+		return lastConnection;
+	}
+	
+	public void setLastConnection(long lastConnection)
+	{
+		this.lastConnection = lastConnection;
+	}
+	
+	public int getGameTime()
+	{
+		return gameTime;
+	}
+	
+	public void setGameTime(int gameTime)
+	{
+		this.gameTime = gameTime;
 	}
 	
 	public enum EnumRankStaff

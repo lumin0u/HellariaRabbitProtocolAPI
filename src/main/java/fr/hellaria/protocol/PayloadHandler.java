@@ -8,7 +8,7 @@ import fr.hellaria.protocol.payloads.PayloadPlayerInfo;
 import fr.hellaria.protocol.payloads.PayloadPlayerNicked;
 import fr.hellaria.protocol.payloads.PayloadPlayerPosition;
 import fr.hellaria.protocol.payloads.PayloadRestart;
-import fr.hellaria.protocol.payloads.PayloadSendToHub;
+import fr.hellaria.protocol.payloads.PayloadSendToServer;
 import fr.hellaria.protocol.payloads.PayloadServerInfo;
 import fr.hellaria.protocol.payloads.PayloadServerTypeAndGame;
 
@@ -30,7 +30,7 @@ public interface PayloadHandler
 	
 	public void handleMonarias(PayloadMonarias payload, String source);
 	
-	public void handleSendToHub(PayloadSendToHub payload, String source);
+	public void handleSendToServer(PayloadSendToServer payload, String source);
 	
 	public void handleRestart(PayloadRestart payload, String source);
 	
