@@ -17,8 +17,9 @@ import com.rabbitmq.client.DeliverCallback;
 
 import fr.hellaria.protocol.payloads.Payload;
 import fr.hellaria.protocol.payloads.PayloadFriends;
-import fr.hellaria.protocol.payloads.PayloadHandshakeSetProtocol;
+import fr.hellaria.protocol.payloads.PayloadHandshake;
 import fr.hellaria.protocol.payloads.PayloadMonarias;
+import fr.hellaria.protocol.payloads.PayloadOnlineCount;
 import fr.hellaria.protocol.payloads.PayloadParty;
 import fr.hellaria.protocol.payloads.PayloadPing;
 import fr.hellaria.protocol.payloads.PayloadPlayerAskPosition;
@@ -82,23 +83,22 @@ public class RabbitConnection
 					if(entry.getValue().test(payload))
 						predicates.remove(entry.getKey());
 					
-				if(payload instanceof PayloadHandshakeSetProtocol)
+				if(payload instanceof PayloadHandshake)
 				{
 					for(PayloadHandler handler : handlers)
 						if(handler != null)
-							if(payload instanceof PayloadHandshakeSetProtocol)
-								handler.handleHandshake(source);
+							if(payload instanceof PayloadHandshake)
+								handler.handleHandshake((PayloadHandshake)payload, source);
 							
-					if(((PayloadHandshakeSetProtocol)payload).getVersion() != HellariaProtocol.PROTOCOL_VERSION)
+					if(((PayloadHandshake)payload).getVersion() != HellariaProtocol.PROTOCOL_VERSION)
 					{
-						if(((PayloadHandshakeSetProtocol)payload).getVersion() > HellariaProtocol.PROTOCOL_VERSION)
+						if(((PayloadHandshake)payload).getVersion() > HellariaProtocol.PROTOCOL_VERSION)
 						{
 							System.err.println("[ProtocolAPI] Ce serveur ne possède pas la derniere version du protocol hellaria.");
 						}
 						else
 						{
 							System.err.println("[ProtocolAPI] \"" + source + "\" ne possède pas la derniere version du protocol hellaria.");
-							sendPacket(new PayloadHandshakeSetProtocol(), source);
 						}
 					}
 				}
@@ -144,6 +144,9 @@ public class RabbitConnection
 						
 						if(payload instanceof PayloadPlayerPosition)
 							handler.handlePlayerPosition((PayloadPlayerPosition)payload, source);
+						
+						if(payload instanceof PayloadOnlineCount)
+							handler.handlePlayerCount((PayloadOnlineCount)payload, source);
 					}
 				}
 			}catch(Exception e)
@@ -165,9 +168,11 @@ public class RabbitConnection
 	{
 		if(target == null || target.equals(""))
 			throw new IllegalArgumentException("target cannot be null/empty");
+		if(payload == null)
+			throw new IllegalArgumentException("payload cannot be null");
 		
 		PayloadSerializer serializer = new PayloadSerializer();
-		serializer.writeVarInt(Payload.idFrom(payload));
+		serializer.writeVarInt(Payload.idFrom(payload.getClass()));
 		serializer.writeString(serverName);
 		payload.serialize(serializer);
 		

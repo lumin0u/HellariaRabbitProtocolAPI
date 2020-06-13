@@ -14,8 +14,8 @@ public abstract class Payload
 	
 	static
 	{
-		payloads = new Class[13];
-		payloads[0] = PayloadHandshakeSetProtocol.class;
+		payloads = new Class[15];
+		payloads[0] = PayloadHandshake.class;
 		payloads[1] = PayloadPing.class;
 		payloads[2] = PayloadPong.class;
 		payloads[3] = PayloadServerInfo.class;
@@ -28,6 +28,8 @@ public abstract class Payload
 		payloads[10] = PayloadFriends.class;
 		payloads[11] = PayloadPlayerPosition.class;
 		payloads[12] = PayloadPlayerAskPosition.class;
+		payloads[13] = PayloadAskServers.class;
+		payloads[14] = PayloadOnlineCount.class;
 	}
 	
 	public static Payload payloadFrom(int id)
@@ -42,10 +44,10 @@ public abstract class Payload
 		return null;
 	}
 	
-	public static int idFrom(Payload payload)
+	public static int idFrom(Class<? extends Payload> payload)
 	{
 		for(int i = 0; i < payloads.length; i++)
-			if(payloads[i].equals(payload.getClass()))
+			if(payloads[i].equals(payload))
 				return i;
 		return -1;
 	}

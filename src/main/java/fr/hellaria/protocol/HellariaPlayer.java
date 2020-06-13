@@ -1,6 +1,7 @@
 package fr.hellaria.protocol;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import fr.hellaria.protocol.payloads.PayloadPlayerInfo;
 import fr.hellaria.protocol.payloads.PayloadPlayerInfo.EnumRankPlayer;
@@ -13,7 +14,7 @@ public class HellariaPlayer
 	private boolean spectator;
 	private boolean nicked;
 	private PayloadPlayerInfo.EnumRankStaff rankStaff;
-	private PayloadPlayerInfo.EnumRankPlayer rankPlayer;
+	private Map<EnumRankPlayer, Long> rankPlayers;
 	private int partyId;
 	private String spectatingTarget;
 	private HashMap<String, Object> settings;
@@ -21,16 +22,20 @@ public class HellariaPlayer
 	private long lastConnection;
 	private int gameTime;
 	
-	public HellariaPlayer(String uid, boolean spectator, boolean nicked, EnumRankStaff rankStaff, EnumRankPlayer rankPlayer, int partyId, String spectatingTarget, HashMap<String, Object> settings)
+	public HellariaPlayer(String uid, String name, boolean spectator, boolean nicked, EnumRankStaff rankStaff, Map<EnumRankPlayer, Long> rankPlayers, int partyId, String spectatingTarget, HashMap<String, Object> settings, long firstConnection, long lastConnection, int gameTime)
 	{
 		this.uid = uid;
+		this.name = name;
 		this.spectator = spectator;
 		this.nicked = nicked;
 		this.rankStaff = rankStaff;
-		this.rankPlayer = rankPlayer;
+		this.rankPlayers = rankPlayers;
 		this.partyId = partyId;
 		this.spectatingTarget = spectatingTarget;
 		this.settings = settings;
+		this.firstConnection = firstConnection;
+		this.lastConnection = lastConnection;
+		this.gameTime = gameTime;
 	}
 	
 	public String getUid()
@@ -73,14 +78,14 @@ public class HellariaPlayer
 		this.rankStaff = rankStaff;
 	}
 	
-	public PayloadPlayerInfo.EnumRankPlayer getRankPlayer()
+	public Map<EnumRankPlayer, Long> getRankPlayers()
 	{
-		return this.rankPlayer;
+		return this.rankPlayers;
 	}
 	
-	public void setRankPlayer(PayloadPlayerInfo.EnumRankPlayer rankPlayer)
+	public void setRankPlayers(Map<EnumRankPlayer, Long> rankPlayers)
 	{
-		this.rankPlayer = rankPlayer;
+		this.rankPlayers = rankPlayers;
 	}
 	
 	public int getPartyId()

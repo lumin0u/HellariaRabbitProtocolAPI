@@ -1,6 +1,7 @@
 package fr.hellaria.protocol.payloads;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import fr.hellaria.protocol.HellariaPlayer;
@@ -14,7 +15,7 @@ public class PayloadPlayerInfo extends Payload
 	private boolean spectator;
 	private boolean nicked;
 	private EnumRankStaff rankStaff;
-	private EnumRankPlayer rankPlayer;
+	private Map<EnumRankPlayer, Long> rankPlayers;
 	private int partyId;
 	private String spectatingTarget;
 	private HashMap<String, Object> settings;
@@ -32,7 +33,7 @@ public class PayloadPlayerInfo extends Payload
 		this.spectator = player.isSpectator();
 		this.nicked = player.isNicked();
 		this.rankStaff = player.getRankStaff();
-		this.rankPlayer = player.getRankPlayer();
+		this.rankPlayers = player.getRankPlayers();
 		this.partyId = player.getPartyId();
 		this.spectatingTarget = player.getSpectatingTarget();
 		this.settings = player.getSettings();
@@ -41,14 +42,14 @@ public class PayloadPlayerInfo extends Payload
 		this.gameTime = player.getGameTime();
 	}
 	
-	public PayloadPlayerInfo(String uid, String name, boolean spectator, boolean nicked, EnumRankStaff rankStaff, EnumRankPlayer rankPlayer, int partyId, String spectatingTarget, HashMap<String, Object> settings, long firstConnection, long lastConnection, int gameTime)
+	public PayloadPlayerInfo(String uid, String name, boolean spectator, boolean nicked, EnumRankStaff rankStaff, Map<EnumRankPlayer, Long> rankPlayers, int partyId, String spectatingTarget, HashMap<String, Object> settings, long firstConnection, long lastConnection, int gameTime)
 	{
 		this.uid = uid;
 		this.name = name;
 		this.spectator = spectator;
 		this.nicked = nicked;
 		this.rankStaff = rankStaff;
-		this.rankPlayer = rankPlayer;
+		this.rankPlayers = rankPlayers;
 		this.partyId = partyId;
 		this.spectatingTarget = spectatingTarget;
 		this.settings = settings;
@@ -56,13 +57,18 @@ public class PayloadPlayerInfo extends Payload
 		this.lastConnection = lastConnection;
 		this.gameTime = gameTime;
 	}
-
+	
 	@Override
 	public void serialize(PayloadSerializer serializer)
 	{
 		serializer.writeString(this.uid);
 		serializer.writeString(this.name);
-		serializer.writeVarInt(this.rankPlayer.ordinal());
+		serializer.writeVarInt(rankPlayers.size());
+		for(Entry<EnumRankPlayer, Long> entry : rankPlayers.entrySet())
+		{
+			serializer.writeVarInt(entry.getKey().ordinal());
+			serializer.writeVarLong(entry.getValue());
+		}
 		serializer.writeVarInt(this.rankStaff.ordinal());
 		serializer.writeVarInt(this.partyId);
 		serializer.writeBoolean(this.nicked);
@@ -101,7 +107,9 @@ public class PayloadPlayerInfo extends Payload
 	{
 		this.uid = deserializer.readString();
 		this.name = deserializer.readString();
-		this.rankPlayer = EnumRankPlayer.values()[deserializer.readVarInt()];
+		rankPlayers = new HashMap<>();
+		for(int i = 0; i < deserializer.readVarInt(); i++)
+			rankPlayers.put(EnumRankPlayer.values()[deserializer.readVarInt()], deserializer.readVarLong());
 		this.rankStaff = EnumRankStaff.values()[deserializer.readVarInt()];
 		this.partyId = deserializer.readVarInt();
 		this.nicked = deserializer.readBoolean();
@@ -166,14 +174,14 @@ public class PayloadPlayerInfo extends Payload
 		this.rankStaff = rankStaff;
 	}
 	
-	public EnumRankPlayer getRankPlayer()
+	public Map<EnumRankPlayer, Long> getRankPlayers()
 	{
-		return rankPlayer;
+		return rankPlayers;
 	}
 	
-	public void setRankPlayer(EnumRankPlayer rankPlayer)
+	public void setRankPlayers(Map<EnumRankPlayer, Long> rankPlayers)
 	{
-		this.rankPlayer = rankPlayer;
+		this.rankPlayers = rankPlayers;
 	}
 	
 	public int getPartyId()
