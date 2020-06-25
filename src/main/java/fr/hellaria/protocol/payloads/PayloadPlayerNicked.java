@@ -1,10 +1,14 @@
 package fr.hellaria.protocol.payloads;
 
+import java.io.EOFException;
+
 import fr.hellaria.protocol.PayloadDeserializer;
 import fr.hellaria.protocol.PayloadSerializer;
 
 public class PayloadPlayerNicked extends Payload
 {
+	public static final int id = 5;
+	
 	private String uid;
 	private String nickName;
 	private String skinSignature;
@@ -34,7 +38,7 @@ public class PayloadPlayerNicked extends Payload
 	}
 	
 	@Override
-	public void deserialize(PayloadDeserializer deserializer)
+	public void deserialize(PayloadDeserializer deserializer) throws EOFException
 	{
 		this.uid = deserializer.readString();
 		this.nickName = deserializer.readString();

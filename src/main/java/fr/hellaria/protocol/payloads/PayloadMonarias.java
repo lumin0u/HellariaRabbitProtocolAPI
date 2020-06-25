@@ -1,10 +1,14 @@
 package fr.hellaria.protocol.payloads;
 
+import java.io.EOFException;
+
 import fr.hellaria.protocol.PayloadDeserializer;
 import fr.hellaria.protocol.PayloadSerializer;
 
 public class PayloadMonarias extends Payload
 {
+	public static final int id = 7;
+	
 	EnumMonariasAction action;
 	double amount;
 	String player;
@@ -30,7 +34,7 @@ public class PayloadMonarias extends Payload
 	}
 	
 	@Override
-	public void deserialize(PayloadDeserializer deserializer)
+	public void deserialize(PayloadDeserializer deserializer) throws EOFException
 	{
 		player = deserializer.readString();
 		action = EnumMonariasAction.values()[deserializer.readVarInt()];

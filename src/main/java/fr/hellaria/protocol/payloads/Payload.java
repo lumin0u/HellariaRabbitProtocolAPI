@@ -1,54 +1,61 @@
 package fr.hellaria.protocol.payloads;
 
+import java.io.EOFException;
+import java.util.ArrayList;
+import java.util.List;
+
 import fr.hellaria.protocol.PayloadDeserializer;
 import fr.hellaria.protocol.PayloadSerializer;
 
-@SuppressWarnings("unchecked")
 public abstract class Payload
 {
 	public abstract void serialize(PayloadSerializer serializer);
 	
-	public abstract void deserialize(PayloadDeserializer deserializer);
+	public abstract void deserialize(PayloadDeserializer deserializer) throws EOFException;
 	
-	private static Class<? extends Payload>[] payloads;
+	private static List<Class<? extends Payload>> payloads = new ArrayList<>();
 	
 	static
 	{
-		payloads = new Class[15];
-		payloads[0] = PayloadHandshake.class;
-		payloads[1] = PayloadPing.class;
-		payloads[2] = PayloadPong.class;
-		payloads[3] = PayloadServerInfo.class;
-		payloads[4] = PayloadPlayerInfo.class;
-		payloads[5] = PayloadPlayerNicked.class;
-		payloads[6] = PayloadServerTypeAndGame.class;
-		payloads[7] = PayloadMonarias.class;
-		payloads[8] = PayloadParty.class;
-		payloads[9] = PayloadRestart.class;
-		payloads[10] = PayloadFriends.class;
-		payloads[11] = PayloadPlayerPosition.class;
-		payloads[12] = PayloadPlayerAskPosition.class;
-		payloads[13] = PayloadAskServers.class;
-		payloads[14] = PayloadOnlineCount.class;
+		payloads.add(PayloadHandshake.class);
+		payloads.add(PayloadPing.class);
+		payloads.add(PayloadPong.class);
+		payloads.add(PayloadServerInfo.class);
+		payloads.add(PayloadPlayerInfo.class);
+		payloads.add(PayloadPlayerNicked.class);
+		payloads.add(PayloadServerTypeAndName.class);
+		payloads.add(PayloadMonarias.class);
+		payloads.add(PayloadParty.class);
+		payloads.add(PayloadRestart.class);
+		payloads.add(PayloadFriends.class);
+		payloads.add(PayloadAskServers.class);
+		payloads.add(PayloadOnlineCount.class);
+		payloads.add(PayloadSendToServer.class);
 	}
 	
 	public static Payload payloadFrom(int id)
 	{
-		try
-		{
-			return payloads[id].newInstance();
-		}catch(InstantiationException | IllegalAccessException e)
-		{
-			e.printStackTrace();
-		}
-		return null;
+		return payloads.stream().filter(p -> idFrom(p) == id).findFirst().map(p -> {
+			try
+			{
+				return p.newInstance();
+			}catch(InstantiationException | IllegalAccessException e)
+			{
+				e.printStackTrace();
+				return null;
+			}
+		}).get();
 	}
 	
 	public static int idFrom(Class<? extends Payload> payload)
 	{
-		for(int i = 0; i < payloads.length; i++)
-			if(payloads[i].equals(payload))
-				return i;
+		try
+		{
+			return payload.getDeclaredField("id").getInt(null);
+		}catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e)
+		{
+			e.printStackTrace();
+		}
 		return -1;
 	}
 	

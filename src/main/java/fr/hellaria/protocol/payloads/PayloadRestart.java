@@ -5,6 +5,8 @@ import fr.hellaria.protocol.PayloadSerializer;
 
 public class PayloadRestart extends Payload
 {
+	public static final int id = 9;
+	
 	public PayloadRestart()
 	{
 		

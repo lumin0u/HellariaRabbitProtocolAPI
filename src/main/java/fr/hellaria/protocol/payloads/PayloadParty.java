@@ -1,5 +1,6 @@
 package fr.hellaria.protocol.payloads;
 
+import java.io.EOFException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +9,9 @@ import fr.hellaria.protocol.PayloadSerializer;
 
 public class PayloadParty extends Payload
 {
-	private int id;
+	public static final int id = 8;
+	
+	private int pid;
 	private List<String> players;
 	private String leader;
 	
@@ -19,7 +22,7 @@ public class PayloadParty extends Payload
 	
 	public PayloadParty(int id, List<String> players, String leader)
 	{
-		this.id = id;
+		this.pid = id;
 		this.players = players;
 		this.leader = leader;
 	}
@@ -28,7 +31,7 @@ public class PayloadParty extends Payload
 	@Override
 	public void serialize(PayloadSerializer serializer)
 	{
-		serializer.writeVarInt(id);
+		serializer.writeVarInt(pid);
 		serializer.writeString(leader);
 		serializer.writeVarInt(players.size());
 		for(String pl : players)
@@ -36,9 +39,9 @@ public class PayloadParty extends Payload
 	}
 
 	@Override
-	public void deserialize(PayloadDeserializer deserializer)
+	public void deserialize(PayloadDeserializer deserializer) throws EOFException
 	{
-		id = deserializer.readVarInt();
+		pid = deserializer.readVarInt();
 		leader = deserializer.readString();
 		players = new ArrayList<>();
 		int len = deserializer.readVarInt();
@@ -53,7 +56,7 @@ public class PayloadParty extends Payload
 
 	public void setId(int id)
 	{
-		this.id = id;
+		this.pid = id;
 	}
 
 	public List<String> getPlayers()

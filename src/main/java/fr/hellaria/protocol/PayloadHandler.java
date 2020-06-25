@@ -6,14 +6,12 @@ import fr.hellaria.protocol.payloads.PayloadHandshake;
 import fr.hellaria.protocol.payloads.PayloadMonarias;
 import fr.hellaria.protocol.payloads.PayloadOnlineCount;
 import fr.hellaria.protocol.payloads.PayloadParty;
-import fr.hellaria.protocol.payloads.PayloadPlayerAskPosition;
 import fr.hellaria.protocol.payloads.PayloadPlayerInfo;
 import fr.hellaria.protocol.payloads.PayloadPlayerNicked;
-import fr.hellaria.protocol.payloads.PayloadPlayerPosition;
 import fr.hellaria.protocol.payloads.PayloadRestart;
 import fr.hellaria.protocol.payloads.PayloadSendToServer;
 import fr.hellaria.protocol.payloads.PayloadServerInfo;
-import fr.hellaria.protocol.payloads.PayloadServerTypeAndGame;
+import fr.hellaria.protocol.payloads.PayloadServerTypeAndName;
 
 @SuppressWarnings("unused")
 public abstract class PayloadHandler
@@ -33,7 +31,7 @@ public abstract class PayloadHandler
 	public void handlePlayerNicked(PayloadPlayerNicked payload, String source)
 	{}
 	
-	public void handleServerTypeAndGame(PayloadServerTypeAndGame payload, String source)
+	public void handleServerTypeAndGame(PayloadServerTypeAndName payload, String source)
 	{}
 	
 	public void handleParty(PayloadParty payload, String source)
@@ -49,12 +47,6 @@ public abstract class PayloadHandler
 	{}
 	
 	public void handleFriends(PayloadFriends payload, String source)
-	{}
-	
-	public void handleAskPosition(PayloadPlayerAskPosition payload, String source)
-	{}
-	
-	public void handlePlayerPosition(PayloadPlayerPosition payload, String source)
 	{}
 	
 	public void handleAskServers(PayloadAskServers payload, String source)

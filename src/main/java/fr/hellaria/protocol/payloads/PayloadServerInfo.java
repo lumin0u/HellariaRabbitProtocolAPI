@@ -1,14 +1,20 @@
 package fr.hellaria.protocol.payloads;
 
+import java.io.EOFException;
+import java.util.ArrayList;
+import java.util.List;
+
 import fr.hellaria.protocol.HellariaServer;
 import fr.hellaria.protocol.PayloadDeserializer;
 import fr.hellaria.protocol.PayloadSerializer;
 
 public class PayloadServerInfo extends Payload
 {
+	public static final int id = 3;
+	
 	private String name;
 	private EnumServerStatus status;
-//	private List<String> players, spectators;
+	private List<String> players, spectators;
 	
 	public PayloadServerInfo()
 	{
@@ -18,17 +24,17 @@ public class PayloadServerInfo extends Payload
 	public PayloadServerInfo(HellariaServer server)
 	{
 		this.name = server.getName();
-//		this.players = new ArrayList<>(server.getPlayers());
-//		this.spectators = new ArrayList<>(server.getSpectators());
+		this.players = new ArrayList<>(server.getPlayers());
+		this.spectators = new ArrayList<>(server.getSpectators());
 		this.status = server.getStatus();
 	}
 	
-	public PayloadServerInfo(String name, EnumServerStatus status)//, List<String> players, List<String> spectators)
+	public PayloadServerInfo(String name, EnumServerStatus status, List<String> players, List<String> spectators)
 	{
 		this.name = name;
 		this.status = status;
-//		this.players = new ArrayList<>(players);
-//		this.spectators = new ArrayList<>(spectators);
+		this.players = new ArrayList<>(players);
+		this.spectators = new ArrayList<>(spectators);
 	}
 	
 	@Override
@@ -36,25 +42,28 @@ public class PayloadServerInfo extends Payload
 	{
 		serializer.writeString(name);
 		serializer.writeVarInt(status.ordinal());
-//		serializer.writeVarInt(players.size());
-//		for(String s : players)
-//			serializer.writeString(s);
-//		serializer.writeVarInt(spectators.size());
-//		for(String s : spectators)
-//			serializer.writeString(s);
+		serializer.writeVarInt(players.size());
+		for(String s : players)
+			serializer.writeString(s);
+		serializer.writeVarInt(spectators.size());
+		for(String s : spectators)
+			serializer.writeString(s);
 		
 	}
 	
 	@Override
-	public void deserialize(PayloadDeserializer deserializer)
+	public void deserialize(PayloadDeserializer deserializer) throws EOFException
 	{
 		name = deserializer.readString();
 		status = EnumServerStatus.values()[deserializer.readVarInt()];
-//		players = new ArrayList<>();
-//		for(int i = 0; i < deserializer.readVarInt(); i++)
-//			players.add(deserializer.readString());
-//		for(int i = 0; i < deserializer.readVarInt(); i++)
-//			spectators.add(deserializer.readString());
+		players = new ArrayList<>();
+		int len = deserializer.readVarInt();
+		for(int i = 0; i < len; i++)
+			players.add(deserializer.readString());
+		spectators = new ArrayList<>();
+		len = deserializer.readVarInt();
+		for(int i = 0; i < len; i++)
+			spectators.add(deserializer.readString());
 	}
 	
 	public String getName()
@@ -67,15 +76,15 @@ public class PayloadServerInfo extends Payload
 		return status;
 	}
 	
-//	public List<String> getPlayers()
-//	{
-//		return new ArrayList<>(players);
-//	}
-//	
-//	public List<String> getSpectators()
-//	{
-//		return new ArrayList<>(spectators);
-//	}
+	public List<String> getPlayers()
+	{
+		return new ArrayList<>(players);
+	}
+	
+	public List<String> getSpectators()
+	{
+		return new ArrayList<>(spectators);
+	}
 	
 	public void setName(String name)
 	{
@@ -87,15 +96,15 @@ public class PayloadServerInfo extends Payload
 		this.status = status;
 	}
 	
-//	public void setPlayers(List<String> players)
-//	{
-//		this.players = players;
-//	}
-//	
-//	public void setSpectators(List<String> spectators)
-//	{
-//		this.spectators = spectators;
-//	}
+	public void setPlayers(List<String> players)
+	{
+		this.players = players;
+	}
+	
+	public void setSpectators(List<String> spectators)
+	{
+		this.spectators = spectators;
+	}
 	
 	public static enum EnumServerStatus
 	{
@@ -105,6 +114,7 @@ public class PayloadServerInfo extends Payload
 		IN_GAME,
 		RESTARTING,
 		STARTING,
+		CLOSED,
 		OFFLINE;
 	}
 }

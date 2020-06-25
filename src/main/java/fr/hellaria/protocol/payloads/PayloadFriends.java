@@ -1,5 +1,6 @@
 package fr.hellaria.protocol.payloads;
 
+import java.io.EOFException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +9,8 @@ import fr.hellaria.protocol.PayloadSerializer;
 
 public class PayloadFriends extends Payload
 {
+	public static final int id = 10;
+	
 	String uuid;
 	List<String> friends;
 	
@@ -31,11 +34,12 @@ public class PayloadFriends extends Payload
 	}
 	
 	@Override
-	public void deserialize(PayloadDeserializer deserializer)
+	public void deserialize(PayloadDeserializer deserializer) throws EOFException
 	{
 		uuid = deserializer.readString();
 		friends = new ArrayList<>();
-		for(int i = 0; i < deserializer.readVarInt(); i++)
+		int len = deserializer.readVarInt();
+		for(int i = 0; i < len; i++)
 			friends.add(deserializer.readString());
 	}
 	

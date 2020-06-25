@@ -1,5 +1,6 @@
 package fr.hellaria.protocol.payloads;
 
+import java.io.EOFException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -10,6 +11,8 @@ import fr.hellaria.protocol.PayloadSerializer;
 
 public class PayloadPlayerInfo extends Payload
 {
+	public static final int id = 4;
+	
 	private String uid;
 	private String name;
 	private boolean spectator;
@@ -103,12 +106,13 @@ public class PayloadPlayerInfo extends Payload
 	}
 	
 	@Override
-	public void deserialize(PayloadDeserializer deserializer)
+	public void deserialize(PayloadDeserializer deserializer) throws EOFException
 	{
 		this.uid = deserializer.readString();
 		this.name = deserializer.readString();
 		rankPlayers = new HashMap<>();
-		for(int i = 0; i < deserializer.readVarInt(); i++)
+		int ranksSize = deserializer.readVarInt();
+		for(int i = 0; i < ranksSize; i++)
 			rankPlayers.put(EnumRankPlayer.values()[deserializer.readVarInt()], deserializer.readVarLong());
 		this.rankStaff = EnumRankStaff.values()[deserializer.readVarInt()];
 		this.partyId = deserializer.readVarInt();

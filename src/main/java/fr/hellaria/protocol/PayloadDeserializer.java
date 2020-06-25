@@ -1,5 +1,6 @@
 package fr.hellaria.protocol;
 
+import java.io.EOFException;
 import java.nio.ByteBuffer;
 
 public class PayloadDeserializer
@@ -12,12 +13,14 @@ public class PayloadDeserializer
 		this.payload = payload;
 	}
 	
-	public byte readByte()
+	public byte readByte() throws EOFException
 	{
+		if(index >= payload.length)
+			throw new EOFException();
 		return payload[index++];
 	}
 	
-	public byte[] readBytes(int len)
+	public byte[] readBytes(int len) throws EOFException
 	{
 		byte[] bytes = new byte[len];
 		for(int i = 0; i < len; i++)
@@ -25,20 +28,25 @@ public class PayloadDeserializer
 		return bytes;
 	}
 	
-	public byte[] readFullBytes()
+	public byte[] remainingBytes()
 	{
 		byte[] bytes = new byte[payload.length-index];
 		for(int i = 0; i < bytes.length; i++)
-			bytes[i] = readByte();
+			bytes[i] = payload[i+index];
 		return bytes;
 	}
 	
-	public boolean readBoolean()
+	public int remaining()
+	{
+		return payload.length-index;
+	}
+	
+	public boolean readBoolean() throws EOFException
 	{
 		return readByte() != 0;
 	}
 	
-	public double readDouble()
+	public double readDouble() throws EOFException
 	{
 		ByteBuffer buffer = ByteBuffer.allocate(8);
 		for(int i = 0; i < buffer.capacity(); i++)
@@ -46,7 +54,7 @@ public class PayloadDeserializer
 		return buffer.getDouble(0);
 	}
 	
-	public float readFloat()
+	public float readFloat() throws EOFException
 	{
 		ByteBuffer buffer = ByteBuffer.allocate(4);
 		for(int i = 0; i < buffer.capacity(); i++)
@@ -54,7 +62,7 @@ public class PayloadDeserializer
 		return buffer.getFloat(0);
 	}
 	
-	public int readInt()
+	public int readInt() throws EOFException
 	{
 		ByteBuffer buffer = ByteBuffer.allocate(4);
 		for(int i = 0; i < buffer.capacity(); i++)
@@ -62,7 +70,7 @@ public class PayloadDeserializer
 		return buffer.getInt(0);
 	}
 	
-	public long readLong()
+	public long readLong() throws EOFException
 	{
 		ByteBuffer buffer = ByteBuffer.allocate(8);
 		for(int i = 0; i < buffer.capacity(); i++)
@@ -70,7 +78,7 @@ public class PayloadDeserializer
 		return buffer.getLong(0);
 	}
 	
-	public short readShort()
+	public short readShort() throws EOFException
 	{
 		ByteBuffer buffer = ByteBuffer.allocate(2);
 		for(int i = 0; i < buffer.capacity(); i++)
@@ -78,16 +86,13 @@ public class PayloadDeserializer
 		return buffer.getShort(0);
 	}
 	
-	public String readString()
+	public String readString() throws EOFException
 	{
 		int len = readVarInt();
-		byte[] bytes = new byte[len];
-		for(int i = 0; i < len; i++)
-			bytes[i] = readByte();
-		return new String(bytes);
+		return new String(readBytes(len));
 	}
 	
-	public int readVarInt()
+	public int readVarInt() throws EOFException
 	{
 		int numRead = 0;
 		int result = 0;
@@ -108,7 +113,7 @@ public class PayloadDeserializer
 		return result;
 	}
 	
-	public long readVarLong()
+	public long readVarLong() throws EOFException
 	{
 		int numRead = 0;
 		long result = 0;

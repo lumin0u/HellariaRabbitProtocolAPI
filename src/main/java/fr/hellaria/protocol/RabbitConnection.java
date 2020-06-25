@@ -16,21 +16,20 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 
 import fr.hellaria.protocol.payloads.Payload;
+import fr.hellaria.protocol.payloads.PayloadAskServers;
 import fr.hellaria.protocol.payloads.PayloadFriends;
 import fr.hellaria.protocol.payloads.PayloadHandshake;
 import fr.hellaria.protocol.payloads.PayloadMonarias;
 import fr.hellaria.protocol.payloads.PayloadOnlineCount;
 import fr.hellaria.protocol.payloads.PayloadParty;
 import fr.hellaria.protocol.payloads.PayloadPing;
-import fr.hellaria.protocol.payloads.PayloadPlayerAskPosition;
 import fr.hellaria.protocol.payloads.PayloadPlayerInfo;
 import fr.hellaria.protocol.payloads.PayloadPlayerNicked;
-import fr.hellaria.protocol.payloads.PayloadPlayerPosition;
 import fr.hellaria.protocol.payloads.PayloadPong;
 import fr.hellaria.protocol.payloads.PayloadRestart;
 import fr.hellaria.protocol.payloads.PayloadSendToServer;
 import fr.hellaria.protocol.payloads.PayloadServerInfo;
-import fr.hellaria.protocol.payloads.PayloadServerTypeAndGame;
+import fr.hellaria.protocol.payloads.PayloadServerTypeAndName;
 
 public class RabbitConnection
 {
@@ -63,7 +62,7 @@ public class RabbitConnection
 			try
 			{
 				PayloadDeserializer deserializer = new PayloadDeserializer(delivery.getBody());
-				
+
 				int packetId = deserializer.readVarInt();
 				
 				if(packetId == 0x7e)
@@ -82,14 +81,13 @@ public class RabbitConnection
 				for(Entry<Integer, Predicate<Payload>> entry : predicates.entrySet())
 					if(entry.getValue().test(payload))
 						predicates.remove(entry.getKey());
-					
+				
 				if(payload instanceof PayloadHandshake)
 				{
 					for(PayloadHandler handler : handlers)
 						if(handler != null)
-							if(payload instanceof PayloadHandshake)
-								handler.handleHandshake((PayloadHandshake)payload, source);
-							
+							handler.handleHandshake((PayloadHandshake)payload, source);
+						
 					if(((PayloadHandshake)payload).getVersion() != HellariaProtocol.PROTOCOL_VERSION)
 					{
 						if(((PayloadHandshake)payload).getVersion() > HellariaProtocol.PROTOCOL_VERSION)
@@ -112,41 +110,40 @@ public class RabbitConnection
 					for(PayloadHandler handler : handlers)
 					{
 						if(handler != null)
+						{
 							if(payload instanceof PayloadServerInfo)
 								handler.handleServerInfo((PayloadServerInfo)payload, source);
 							
-						if(payload instanceof PayloadPlayerInfo)
-							handler.handlePlayerInfo((PayloadPlayerInfo)payload, source);
-						
-						if(payload instanceof PayloadPlayerNicked)
-							handler.handlePlayerNicked((PayloadPlayerNicked)payload, source);
-						
-						if(payload instanceof PayloadServerTypeAndGame)
-							handler.handleServerTypeAndGame((PayloadServerTypeAndGame)payload, source);
-						
-						if(payload instanceof PayloadParty)
-							handler.handleParty((PayloadParty)payload, source);
-						
-						if(payload instanceof PayloadMonarias)
-							handler.handleMonarias((PayloadMonarias)payload, source);
-						
-						if(payload instanceof PayloadSendToServer)
-							handler.handleSendToServer((PayloadSendToServer)payload, source);
-						
-						if(payload instanceof PayloadRestart)
-							handler.handleRestart((PayloadRestart)payload, source);
-						
-						if(payload instanceof PayloadFriends)
-							handler.handleFriends((PayloadFriends)payload, source);
-						
-						if(payload instanceof PayloadPlayerAskPosition)
-							handler.handleAskPosition((PayloadPlayerAskPosition)payload, source);
-						
-						if(payload instanceof PayloadPlayerPosition)
-							handler.handlePlayerPosition((PayloadPlayerPosition)payload, source);
-						
-						if(payload instanceof PayloadOnlineCount)
-							handler.handlePlayerCount((PayloadOnlineCount)payload, source);
+							if(payload instanceof PayloadPlayerInfo)
+								handler.handlePlayerInfo((PayloadPlayerInfo)payload, source);
+							
+							if(payload instanceof PayloadPlayerNicked)
+								handler.handlePlayerNicked((PayloadPlayerNicked)payload, source);
+							
+							if(payload instanceof PayloadServerTypeAndName)
+								handler.handleServerTypeAndGame((PayloadServerTypeAndName)payload, source);
+							
+							if(payload instanceof PayloadParty)
+								handler.handleParty((PayloadParty)payload, source);
+							
+							if(payload instanceof PayloadMonarias)
+								handler.handleMonarias((PayloadMonarias)payload, source);
+							
+							if(payload instanceof PayloadSendToServer)
+								handler.handleSendToServer((PayloadSendToServer)payload, source);
+							
+							if(payload instanceof PayloadRestart)
+								handler.handleRestart((PayloadRestart)payload, source);
+							
+							if(payload instanceof PayloadFriends)
+								handler.handleFriends((PayloadFriends)payload, source);
+							
+							if(payload instanceof PayloadOnlineCount)
+								handler.handlePlayerCount((PayloadOnlineCount)payload, source);
+							
+							if(payload instanceof PayloadAskServers)
+								handler.handleAskServers((PayloadAskServers)payload, source);
+						}
 					}
 				}
 			}catch(Exception e)
@@ -176,7 +173,6 @@ public class RabbitConnection
 		serializer.writeString(serverName);
 		payload.serialize(serializer);
 		
-		// channel.queueDeclare(target, false, false, false, null);
 		channel.basicPublish("", target, null, serializer.getBytes());
 	}
 	

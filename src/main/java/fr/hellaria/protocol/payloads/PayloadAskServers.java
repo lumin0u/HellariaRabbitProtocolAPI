@@ -5,6 +5,8 @@ import fr.hellaria.protocol.PayloadSerializer;
 
 public class PayloadAskServers extends Payload
 {
+	public static final int id = 11;
+	
 	public PayloadAskServers()
 	{
 		

@@ -48,7 +48,7 @@ public class PayloadSerializer
 	
 	public void writeString(String value)
 	{
-		writeVarInt(value.length());
+		writeVarInt(value.getBytes().length);
 		writeBytes(value.getBytes());
 	}
 	

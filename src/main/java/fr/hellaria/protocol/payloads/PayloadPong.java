@@ -5,6 +5,8 @@ import fr.hellaria.protocol.PayloadSerializer;
 
 public class PayloadPong extends Payload
 {
+	public static final int id = 2;
+	
 	public PayloadPong()
 	{
 		
